@@ -4,7 +4,10 @@ An assistant to help to solve some image puzzles. May be useful during CTF
 **GUI Assistant to solve some image puzzles**
 
 ## Screenshot
-![Screenshot of app](screenshot.png)
+### Shuffled
+![Screenshot of app](screenshot-shuffled.png)
+### Solved
+![Screenshot of app](screenshot-solved.png)
 
 ## Features
   + Split image in pieces
