@@ -7,9 +7,7 @@ import tkinter as tk
 from PIL import Image
 from PIL import ImageTk
 
-#TBD next release
-# 2- List python prerequisites
-# 3- List images types
+#Version 1.1
 
 ### Manage command line Arguments ###
 parser = argparse.ArgumentParser(prog='pict_puzzle.py', description='Solve and Generate Picture Puzzle')
@@ -127,6 +125,7 @@ class Piece:
 		self.selected_to_move = False
 		self.selected_as_match = False
 		self.blocked = False
+		self.view_number = False
 
 	def __str__(self):
 		return f"Piece {self.number = } {self.x = } {self.y = }"
@@ -205,6 +204,7 @@ class MyWindow:
 		self.side_rectangle = False # used to manage the rectangle of selection of piece and side
 		self.canvas = []
 		self.buttons = []
+		self.checkbutton_num = tk.IntVar()
 
 		self.init_canvas()
 		self.init_buttons()
@@ -236,6 +236,7 @@ class MyWindow:
 		
 		self.frame_menu.console			= tk.Label(self.frame_menu, fg=fg_color, text="\n\nConsole >", anchor="nw", justify=tk.LEFT, font=("Courier", 10, "bold"))
 
+		self.frame_menu.chekbutton_num	= tk.Checkbutton(self.frame_menu, text = "View Pieces Numbers", variable = self.checkbutton_num, command = self.view_numbers)
 		self.frame_menu.button_unblock	= tk.Button(self.frame_menu, text = "Unblock all", command = self.unblock_all)
 		self.frame_menu.button_shuffle	= tk.Button(self.frame_menu, text = "Shuffle", command = self.shuffle)
 		self.frame_menu.button_save		= tk.Button(self.frame_menu, text = "Save", command = self.Puzzle.save)
@@ -253,11 +254,12 @@ class MyWindow:
 		self.frame_menu.console.grid(			row=5,column=0,columnspan=3,sticky=tk.W)
 		self.frame_menu.Console.grid(			row=6,column=0,columnspan=2,sticky=tk.W)
 		self.frame_menu.console_scroll.grid(	row=6,column=2,				sticky=tk.N+tk.S)
-		self.frame_menu.button_unblock.grid(	row=7,column=0,columnspan=3,sticky=tk.W+tk.E)
-		self.frame_menu.button_shuffle.grid(	row=8,column=0,columnspan=3,sticky=tk.W+tk.E)
-		self.frame_menu.button_save.grid(		row=9,column=0,				sticky=tk.W+tk.E)
-		self.frame_menu.button_quit.grid(		row=9,column=1,columnspan=2,sticky=tk.W+tk.E)
-		self.frame_menu.button_help.grid(		row=12,column=0,columnspan=3,sticky=tk.W+tk.E,pady=50)
+		self.frame_menu.chekbutton_num.grid(	row=9,column=0,columnspan=3,sticky=tk.W)
+		self.frame_menu.button_unblock.grid(	row=11,column=0,columnspan=3,sticky=tk.W+tk.E)
+		self.frame_menu.button_shuffle.grid(	row=12,column=0,columnspan=3,sticky=tk.W+tk.E)
+		self.frame_menu.button_save.grid(		row=13,column=0,				sticky=tk.W+tk.E)
+		self.frame_menu.button_quit.grid(		row=13,column=1,columnspan=2,sticky=tk.W+tk.E)
+		self.frame_menu.button_help.grid(		row=18,column=0,columnspan=3,sticky=tk.W+tk.E,pady=50)
 
 	def init_canvas(self):
 		number = 0
@@ -266,7 +268,7 @@ class MyWindow:
 			image = ImageTk.PhotoImage(piece)
 			self.canvas.append(tk.Canvas(self.frame_grid, width=self.Puzzle.piece_width, height=self.Puzzle.piece_height, borderwidth=0, highlightthickness=1))
 			self.canvas[number].fd_image = self.canvas[number].create_image((self.Puzzle.piece_width/2,self.Puzzle.piece_height/2),image=image)
-			self.canvas[number].create_text((self.Puzzle.piece_width/2,self.Puzzle.piece_height/2),text=number,fill='red')
+			#self.canvas[number].create_text((self.Puzzle.piece_width/2,self.Puzzle.piece_height/2),text=number,fill='red')
 			self.canvas[number].image = image
 			self.canvas[number].grid(row=y,column=x)
 			self.canvas[number].bind('<Button-1>',			lambda event, arg=number: self.event_mouse_left_click(event, arg))
@@ -495,6 +497,21 @@ class MyWindow:
 		for piece in self.Puzzle.Pieces:
 			self.mark_piece_unblocked(piece.number)
 
+	def view_numbers(self):
+		if self.checkbutton_num.get() == 1: #Selected
+			for piece in self.Puzzle.Pieces:
+				if piece.view_number is False:
+					piece.view_number = self.canvas[piece.number].create_text((self.Puzzle.piece_width/2,self.Puzzle.piece_height/2),text=piece.number,fill='red')
+				else:
+					print(f"Unexpected Error ! Number is already printed... for piece {piece.number}")
+			self.print_log(f"Pieces Numbers are visible")
+		else: #UnSelected
+			for piece in self.Puzzle.Pieces:
+				if piece.view_number is not False:
+					self.canvas[piece.number].delete(piece.view_number)
+					piece.view_number = False
+			self.print_log(f"Pieces Numbers are hidden")
+
 	def shuffle(self):
 		number = 0
 		has_moved = []
@@ -521,11 +538,26 @@ class MyWindow:
 			return(False)		 
 
 	def help(self):
+		helptext = '''
+		Actions : 
+		
+		1- Right click to select a piece to move then left click to the correct place
+		2- Double click to block a piece to move
+		3- Find a match by clicking on the border rectangle of each piece
+		4- Try to solve line by line with left '>' and top buttons 'V'
+		
+		Contact and comments : 
+		https://github.com/totoiste/CTFPuzzleSolverAssistant/'''
+		
 		help_window = tk.Toplevel()
 		help_window.title("Help")
-		help_window.config(width=300, height=200)
-		button_close = tk.Button(help_window,text="Close window",command=help_window.destroy		)
-		button_close.place(x=75, y=75)
+		help_window.config(width=800, height=200)
+
+		help_window.canvas1 = tk.Canvas(help_window, width = 800, height = 180, bg="#e0e0e0")
+		help_window.canvas1.create_text((6,6),text=helptext, anchor="nw", justify=tk.LEFT, fill="black", font=("Courier", 8))
+		button_close = tk.Button(help_window,text="Close window",command=help_window.destroy)
+		help_window.canvas1.pack()
+		button_close.pack()
 		
 ### Functions ###
 def display_image(title,image):
