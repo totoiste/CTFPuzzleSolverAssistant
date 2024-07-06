@@ -28,7 +28,7 @@ class Puzzle:
 		self.piece_width = int(self.image_width/self.nb_cols)
 		self.piece_height = int(self.image_height/self.nb_rows)
 
-		print(f"Image size (width x height) = {self.image_width} x {self.image_height}")
+		#print(f"Image size (width x height) = {self.image_width} x {self.image_height}")
 
 		#Handle Exceptions before splitting in images in pieces
 		if ((self.image_width % nb_cols)|(self.image_height % nb_rows)) != 0:
@@ -100,6 +100,7 @@ class Puzzle:
 		else:
 			np1 = np1.astype(np.int16) #before this conversion values are : uint8
 			np2 = np2.astype(np.int16)
+			#https://numpy.org/doc/stable/reference/generated/numpy.linalg.norm.html
 			return np.linalg.norm(np.subtract(np1,np2)) 
 
 	def search_match(self,number,side):
@@ -173,7 +174,7 @@ class MyWindow:
 		self.window 				= window
 		self.Puzzle 				= Puzzle
 		window_width				= Puzzle.image_width+self.Puzzle.nb_cols*2
-		window_height				= Puzzle.image_height+self.Puzzle.nb_rows*2
+		window_height				= Puzzle.image_height+self.Puzzle.nb_rows*4
 		self.window.title("Puzzle Solver Assistant")
 		self.window.geometry(f"{window_width+self.menu_width+self.bar_finder_length}x{window_height+self.bar_finder_length}")
 		self.window.resizable(width=False, height=False)
@@ -277,28 +278,29 @@ class MyWindow:
 			self.canvas[number].bind('<Motion>',			lambda event, arg=number: self.event_mouse_motion(event, arg))
 			self.canvas[number].bind('<Enter>',				lambda event, arg=number: self.event_mouse_motion_enter(event, arg))
 			self.canvas[number].bind('<Leave>',				lambda event, arg=number: self.event_mouse_motion_leave(event, arg))
-			self.window.update()
+			#Uncomment to see pieces appearing but very slow
+			#self.window.update()
 			number += 1
 
 	def init_buttons(self):
 		number =  0
 
 		#Bouton Corner
-		button = self.buttons.append(tk.Button(self.frame_finder_corner, text ="$", command = lambda : self.search_match_grid()))
+		button = self.buttons.append(tk.Button(self.frame_finder_corner, text ="$", font=("Courier", 6, "bold"), command = lambda : self.search_match_grid()))
 		self.buttons[number].grid(row=0,column=0)
 		number += 1
 		
 		#Boutons columns
 		for c in range(self.Puzzle.nb_cols):
 			self.frame_finder_cols.grid_columnconfigure(c, minsize=self.Puzzle.piece_width+2)
-			button = self.buttons.append(tk.Button(self.frame_finder_cols, text ="V", command = lambda arg=c: self.search_match_line("col",arg)))
+			button = self.buttons.append(tk.Button(self.frame_finder_cols, text ="V", font=("Courier", 6, "bold"), command = lambda arg=c: self.search_match_line("col",arg)))
 			self.buttons[number].grid(row=0, column=c, sticky=tk.E+tk.W)
 			number += 1
 
 		#Boutons rows
 		for r in range(self.Puzzle.nb_rows):
 			self.frame_finder_rows.grid_rowconfigure(r, minsize=self.Puzzle.piece_height+2)
-			button = self.buttons.append(tk.Button(self.frame_finder_rows, text =">", command = lambda arg=r: self.search_match_line("row",arg)))
+			button = self.buttons.append(tk.Button(self.frame_finder_rows, text =">", font=("Courier", 6, "bold"), command = lambda arg=r: self.search_match_line("row",arg)))
 			self.buttons[number].grid(row=r, column=0, sticky=tk.N+tk.S)
 			number += 1
 
@@ -308,7 +310,7 @@ class MyWindow:
 		self.canvas[number].delete(self.side_rectangle)
 
 		rectangle_color="white"
-		rectangle_thickness = 10
+		rectangle_thickness = self.Puzzle.piece_width / 8
 		
 		side = self.determine_side(event.x,event.y)
 		if side == 'N':
@@ -337,7 +339,7 @@ class MyWindow:
 		self.print_log(f"Piece Selected to move = {number}")
 	
 	def mark_piece_ready_to_move(self,number):
-		radius = 15
+		radius = int(self.Puzzle.piece_width / 3)
 		color = "green" 
 		self.Puzzle.Pieces[number].selected_to_move = self.canvas[number].create_oval(1,1,radius+1,radius+1,fill=color)
 
@@ -365,7 +367,7 @@ class MyWindow:
 			self.move_pieces(self.Puzzle.Pieces[piece_to_move],self.Puzzle.Pieces[number])
 
 	def mark_piece_as_match(self,number):
-		radius = 15
+		radius = int(self.Puzzle.piece_width / 3)
 		color = "blue" 
 		self.Puzzle.Pieces[number].selected_as_match = self.canvas[number].create_oval(1,1,radius+1,radius+1,fill=color)
 
@@ -382,7 +384,7 @@ class MyWindow:
 
 
 	def mark_piece_blocked(self,number):
-		radius = 15
+		radius = int(self.Puzzle.piece_width / 3)
 		color = "red" 
 		self.Puzzle.Pieces[number].block(self.canvas[number].create_oval(self.Puzzle.piece_width - radius - 1,1,self.Puzzle.piece_width - 1,radius+1,fill=color))
 		self.print_log(f"Piece {number} blocked")
@@ -501,7 +503,7 @@ class MyWindow:
 		if self.checkbutton_num.get() == 1: #Selected
 			for piece in self.Puzzle.Pieces:
 				if piece.view_number is False:
-					piece.view_number = self.canvas[piece.number].create_text((self.Puzzle.piece_width/2,self.Puzzle.piece_height/2),text=piece.number,fill='red')
+					piece.view_number = self.canvas[piece.number].create_text((self.Puzzle.piece_width/2,self.Puzzle.piece_height/2),text=piece.number,fill='red',font=("Courier", 6, "bold"))
 				else:
 					print(f"Unexpected Error ! Number is already printed... for piece {piece.number}")
 			self.print_log(f"Pieces Numbers are visible")
@@ -513,6 +515,9 @@ class MyWindow:
 			self.print_log(f"Pieces Numbers are hidden")
 
 	def shuffle(self):
+		# Time Management
+		#time_start = time.time()
+		
 		number = 0
 		has_moved = []
 		new_order = [y for y in range(self.Puzzle.nb_rows*self.Puzzle.nb_cols)]
@@ -523,6 +528,7 @@ class MyWindow:
 			if number not in has_moved :
 				self.move_pieces(self.Puzzle.Pieces[new_order[number]],self.Puzzle.Pieces[number])
 				has_moved.append(number)
+			#print(f"Time for {number = } : {time.time() - time_start}")
 			number += 1
 
 	def determine_side(self,x,y):
