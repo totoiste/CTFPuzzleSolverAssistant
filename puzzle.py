@@ -62,7 +62,7 @@ class Tk_Puzzle(Puzzle):
 		self._window = window
 		self.Tk_Pieces = []
 		
-		self.side_rectangle = (
+		self.side_search = (
 			False  # used to manage the rectangle of selection of piece and side
 		)
 		
@@ -225,43 +225,37 @@ class Tk_Puzzle(Puzzle):
 	# Mouse Motion
 	def event_mouse_motion(self, event, piece):
 		piece_pos = self.get_pos(piece)
-		self.Tk_Pieces[piece_pos].canvas.delete(self.side_rectangle)
+		self.Tk_Pieces[piece_pos].canvas.delete(self.side_search)
 		
 		rectangle_color = "white"
 		rectangle_thickness = self._Puzzle._piece_width / 5
+		
+		self.loupe = tk.PhotoImage(file="loupe.png")
 
 		side = self.determine_side(event.x, event.y)
 		if side == "N":
-			self.side_rectangle = self.Tk_Pieces[piece_pos].canvas.create_rectangle(
-				0,
-				0,
-				self._Puzzle._piece_width,
-				rectangle_thickness,
-				fill=rectangle_color
+			self.side_search = self.Tk_Pieces[piece_pos].canvas.create_image(
+				self._Puzzle._piece_width / 2,
+				self.loupe.height() / 2,
+				image = self.loupe
 			)
 		elif side == "S":
-			self.side_rectangle = self.Tk_Pieces[piece_pos].canvas.create_rectangle(
-				0,
-				self._Puzzle._piece_height - rectangle_thickness,
-				self._Puzzle._piece_width,
-				self._Puzzle._piece_height,
-				fill=rectangle_color,
+			self.side_search = self.Tk_Pieces[piece_pos].canvas.create_image(
+				self._Puzzle._piece_width / 2,
+				self._Puzzle._piece_height - self.loupe.height() / 2,
+				image = self.loupe
 			)
 		elif side == "W":
-			self.side_rectangle = self.Tk_Pieces[piece_pos].canvas.create_rectangle(
-				0,
-				0,
-				rectangle_thickness,
-				self._Puzzle._piece_height,
-				fill=rectangle_color,
+			self.side_search = self.Tk_Pieces[piece_pos].canvas.create_image(
+				self.loupe.width() / 2,
+				self._Puzzle._piece_height / 2,
+				image = self.loupe
 			)
 		elif side == "E":
-			self.side_rectangle = self.Tk_Pieces[piece_pos].canvas.create_rectangle(
-				self._Puzzle._piece_width - rectangle_thickness,
-				0,
-				self._Puzzle._piece_width,
-				self._Puzzle._piece_height,
-				fill=rectangle_color,
+			self.side_search = self.Tk_Pieces[piece_pos].canvas.create_image(
+				self._Puzzle._piece_width - self.loupe.width() / 2,
+				self._Puzzle._piece_height / 2,
+				image = self.loupe
 			)
 
 	def event_mouse_motion_enter(self, event, piece):
@@ -271,7 +265,7 @@ class Tk_Puzzle(Puzzle):
 	def event_mouse_motion_leave(self, event, piece):
 		piece_pos = self.get_pos(piece)
 		self.Tk_Pieces[piece_pos].canvas.config(highlightthickness=1)
-		self.Tk_Pieces[piece_pos].canvas.delete(self.side_rectangle)
+		self.Tk_Pieces[piece_pos].canvas.delete(self.side_search)
 
 	# Mouse right click - MOVE
 	def event_mouse_right_click(self, event, piece):

@@ -16,3 +16,4 @@ An assistant to help to solve some image puzzles. May be useful during CTF
   + Try to solve line by line
   + Try to find the North West Corner
   + Save an image
+
